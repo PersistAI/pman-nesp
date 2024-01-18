@@ -1,6 +1,7 @@
 {
-    "syringe_diameter_mm": 50,
+    "syringe_diameter_mm": 8,
     "serial_port": "/dev/ttyUSB0",
+    "default_pump_rate_mL_per_min":50,
     "baud_rate": 9600,
     "address": "1"
 }
