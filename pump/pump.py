@@ -1,9 +1,5 @@
 import enum
-# Start transmission
-STX = 0x02
-# End transmission
-ETX = 0x03
-CR = '\r'
+from connection import Connection, STX, ETX, CR
 
 class CommandName(str, enum.Enum):
     """
@@ -42,12 +38,8 @@ class Pump:
         """
         return command_data + CR
 
-
     def sendCommand(self, command_string):
         self.connection.send(command_string)
-
-
-
 
 if __name__ == "__main__":
     import doctest

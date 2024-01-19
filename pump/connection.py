@@ -1,4 +1,10 @@
 import serial
+from typing import Union
+# Start transmission
+STX = '\x02'
+# End transmission
+ETX = '\x03'
+CR = '\r'
 
 baudrate=9600
 class Connection:
@@ -27,12 +33,26 @@ class Connection:
     def receive(self):
         # Receive data from the serial port
         if self.connection and self.connection.is_open:
-            return self.connection.readline().decode().strip()
+            return self.connection.read_until(ETX.encode()).decode().strip()
+
+    def terminal(self, timeout=5):
+        """
+        For communicating directly with a pump
+        Great for troubleshooting
+        """
+        if self.connection:
+            print("setting timeout to:",timeout)
+            self.connection.timeout = timeout
+        while True:
+            data = input("$: ")
+            if self.connection and self.connection.is_open:
+                self.connection.write(data.encode())
+                response = self.connection.read_until(ETX.encode()).decode().strip()
+                print(response)
+            else:
+                print("no connection")
 
 # Example usage
 if __name__ == "__main__":
-    conn = Connection("COM3")  # Replace COM3 with your port
-    conn.send("Hello")
-    print(conn.receive())
-    conn.close()
-
+    conn = Connection('COM24')
+    conn.terminal()
