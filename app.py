@@ -18,7 +18,7 @@ def index():
 
 @app.route('/transfer')
 def transfer():
-    return render_template('transfer.html')
+    return render_template('transfer.html', **config)
 
 @app.route('/pman/push', methods=['POST'])
 def pmanPush():

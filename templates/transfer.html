@@ -4,7 +4,11 @@
     <h3>Pull</h3>
     <form id="pull">
       <label for="pull-address">Address</label>
-      <input type="text" value="" name="pull-address" id="pull-address" />
+      <select value="" name="pull-address" id="pull-address">
+	    {% for address in addresses %}
+	    <option>{{address}}</option>
+	      {% endfor %}
+      </select>
       <label for="pull-vol">Volume</label>
       <input type="text" value="" name="pull-vol" id="pull-vol" />
       <label for="pull-rate">Pump Rate (mL/min)</label>
@@ -16,7 +20,11 @@
     <h3>Push</h3>
     <form id="push">
       <label for="push-address">Address</label>
-      <input type="text" value="" name="push-address" id="push-address" />
+      <select value="" name="push-address" id="push-address">
+	    {% for address in addresses %}
+	    <option>{{address}}</option>
+	      {% endfor %}
+      </select>
       <label for="push-vol">Volume</label>
       <input type="text" value="" name="push-vol" id="push-vol" />
       <label for="push-rate">Pump Rate (mL/min)</label>
