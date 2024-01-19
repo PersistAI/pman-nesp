@@ -1,0 +1,12 @@
+Examples:
+> DIA 14.43 0x0d (Diameter of 14.43)
+>
+> RAT 150 MH 0x0d (Flow rate of 150 mL/hr)
+>
+> VOL 15 ML 0x0d (Volume dispense target of 15 mL)
+>
+> DIR INF 0x0d (Pumping direction set to infuse)
+>
+> RUN 0x0d (Start the pumping program)
+>
+> STP 0x0d (Stop or pause the pumping program)
