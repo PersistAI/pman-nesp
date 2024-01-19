@@ -25,11 +25,11 @@ def pmanPush():
     d = json.loads(request.data)
     args = d['args']
     port = Port(app.config['serial_port'])
-    pump = Pump(port)
+    pump = Pump(port, address=args[0])
     pump.syringe_diameter = app.config['syringe_diameter_mm']
     pump.pumping_direction = PumpingDirection.INFUSE
-    pump.pumping_volume = args[0]
-    pump.pumping_rate = args[1]
+    pump.pumping_volume = args[1]
+    pump.pumping_rate = args[2]
     pump.run()
     return {
             'status': 'ok',
@@ -41,7 +41,7 @@ def pmanPull():
     d = json.loads(request.data)
     args = d['args']
     port = Port(app.config['serial_port'])
-    pump = Pump(port)
+    pump = Pump(port, address=args[0])
     pump.syringe_diameter = app.config['syringe_diameter_mm']
     pump.pumping_direction = PumpingDirection.WITHDRAW
     pump.pumping_volume = args[0]

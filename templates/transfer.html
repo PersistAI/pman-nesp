@@ -3,6 +3,8 @@
   <div>
     <h3>Pull</h3>
     <form id="pull">
+      <label for="pull-address">Address</label>
+      <input type="text" value="" name="pull-address" id="pull-address" />
       <label for="pull-vol">Volume</label>
       <input type="text" value="" name="pull-vol" id="pull-vol" />
       <label for="pull-rate">Pump Rate (mL/min)</label>
@@ -13,6 +15,8 @@
   <div>
     <h3>Push</h3>
     <form id="push">
+      <label for="push-address">Address</label>
+      <input type="text" value="" name="push-address" id="push-address" />
       <label for="push-vol">Volume</label>
       <input type="text" value="" name="push-vol" id="push-vol" />
       <label for="push-rate">Pump Rate (mL/min)</label>
@@ -35,7 +39,8 @@
   pull_btn.addEventListener("click", () => {
     let vol = document.getElementById("pull-vol").value;
     let rate = document.getElementById("pull-rate").value;
-    let args = [vol, rate];
+    let addr = document.getElementById("pull-address").value;
+    let args = [addr, vol, rate];
     pull(args).then(() => {
       display("pull completed");
     });
@@ -44,15 +49,21 @@
   push_btn.addEventListener("click", () => {
     let vol = document.getElementById("push-vol").value;
     let rate = document.getElementById("push-rate").value;
-    let args = [vol, rate];
+    let addr = document.getElementById("pull-address").value;
+    let args = [addr, vol, rate];
     push(args).then(() => {
       display("push completed");
     });
   });
 
   enforceCharset("pull-vol", digits + ".");
-  enforceCharset("pull-rate", digits + ".");
   enforceCharset("push-vol", digits + ".");
+  enforceCharset("pull-rate", digits + ".");
   enforceCharset("push-rate", digits + ".");
+  enforceCharset("pull-address", digits);
+  enforceCharset("push-address", digits);
+
+  enforceLength("pull-address", 2);
+  enforceLength("push-address", 2);
 </script>
 {% endblock%}

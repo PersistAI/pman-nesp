@@ -3,5 +3,5 @@
     "serial_port": "/dev/ttyUSB0",
     "default_pump_rate_mL_per_min":50,
     "baud_rate": 9600,
-    "address": "1"
+    "addresses": [0,1]
 }

@@ -33,9 +33,7 @@ function enforceCharset(input_id, charset=digits){
 		let entered_value = targetInput.value.slice(-1)
 		let pre_event_value = targetInput.value.slice(0,-1)
 		if(!charset.includes(entered_value)){
-
 			targetInput.value = pre_event_value;
-
 			// special cases for lower/upper stuff
 			let upper_case = entered_value.toLocaleUpperCase()
 			let lower_case = entered_value.toLocaleLowerCase()
