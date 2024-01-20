@@ -3,28 +3,19 @@ from flask_cors import CORS
 from pump.pump import Pump
 from pump.connection import Connection
 import json
+import time
 import pdb
 
 config = {}
 with open('./config.json') as f:
     config = json.load(f)
-connection = Connection(config['serial_port'])
 
-connection = Connection(config['serial_port'])
 app = Flask(__name__)
 CORS(app)
 for key in config:
     app.config[key] = config[key]
     
 port = app.config['serial_port']
-
-@app.before_request
-def open_connection():
-    connection.open(port)
-
-@app.teardown_appcontext
-def close_connection():
-    connection.close()
 
 @app.route('/')
 def index():
@@ -34,15 +25,25 @@ def index():
 def transfer():
     return render_template('transfer.html', **config)
 
+@app.route('/stop', methods=['GET','POST'])
+def stop():
+    connection = Connection(config['serial_port'])
+    connection.send('STP\r')
+    connection.close()
+    return {'status':'ok','message':'stopped'}
+
+
 @app.route('/pman/push', methods=['POST'])
 def pmanPush():
     d = json.loads(request.data)
     args = d['args']
+    connection = Connection(config['serial_port'])
     pump = Pump(connection, address=int(args[0]))
     pump.set_direction('INF')
-    pump.set_volume(args[0])
-    pump.set_rate(args[1])
+    pump.set_volume(args[1])
+    pump.set_rate(args[2])
     ret = pump.run()
+    connection.close()
     return {
             'status': 'ok',
             'message': ret
@@ -52,11 +53,16 @@ def pmanPush():
 def pmanPull():
     d = json.loads(request.data)
     args = d['args']
+    connection = Connection(config['serial_port'])
     pump = Pump(connection, address=int(args[0]))
-    pump.set_direction('WDR')
-    pump.set_volume(args[0])
-    pump.set_rate(args[1])
+    print(pump.set_direction('WDR'))
+    print(args[1])
+    print(pump.set_volume(args[1]))
+    print(args[2])
+    print(pump.set_rate(args[2]))
+    time.sleep(1)
     ret = pump.run()
+    connection.close()
     return {
             'status': 'ok',
             'message': ret

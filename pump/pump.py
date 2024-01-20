@@ -60,7 +60,7 @@ class Pump:
         """
         volume: units of ML, a float, string, or int
         """
-        volume = str(volume) + 'ML'
+        volume = str(volume)
         command = CommandName.PUMPING_VOLUME + volume
         command = self._formatCommand(command)
         return self._sendCommand(command)
@@ -69,11 +69,10 @@ class Pump:
         """
         rate: units of mL/Min, a float, string, or int
         """
-        rate = str(rate) + 'MM'
-        command = CommandName.PUMPING_VOLUME + rate
+        rate = str(rate)
+        command = CommandName.PUMPING_RATE + rate
         command = self._formatCommand(command)
         return self._sendCommand(command)
-
 
 
 if __name__ == "__main__":
