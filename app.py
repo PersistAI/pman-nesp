@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from flask_cors import CORS
 from pump.pump import Pump
+from pump.connection import Connection
 import json
 
 config = {}
@@ -11,7 +12,8 @@ app = Flask(__name__)
 for key in config:
     app.config[key] = config[key]
     
-port = Port(app.config['serial_port'])
+port = app.config['serial_port']
+connection = Connection(port)
 
 @app.route('/')
 def index():
@@ -25,7 +27,7 @@ def transfer():
 def pmanPush():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(port, address=int(args[0]))
+    pump = Pump(connection, address=int(args[0]))
     pump.set_direction('INF')
     pump.set_volume(args[0])
     pump.set_rate(args[1])
@@ -39,7 +41,7 @@ def pmanPush():
 def pmanPull():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(port, address=int(args[0]))
+    pump = Pump(connection, address=int(args[0]))
     pump.set_direction('WDR')
     pump.set_volume(args[0])
     pump.set_rate(args[1])

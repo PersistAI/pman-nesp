@@ -1,5 +1,5 @@
 import enum
-from connection import Connection, STX, ETX, CR
+from .connection import Connection, STX, ETX, CR
 
 class CommandName(str, enum.Enum):
     """
