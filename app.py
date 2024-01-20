@@ -3,18 +3,18 @@ from flask_cors import CORS
 from pump.pump import Pump
 from pump.connection import Connection
 import json
+import pdb
 
 config = {}
 with open('./config.json') as f:
     config = json.load(f)
+connection = Connection(config['serial_port'])
 
 app = Flask(__name__)
 for key in config:
     app.config[key] = config[key]
     
 port = app.config['serial_port']
-connection = Connection(port)
-
 @app.route('/')
 def index():
     return render_template('index.html')
