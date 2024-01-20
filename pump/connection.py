@@ -1,5 +1,4 @@
 import serial
-from typing import Union
 # Start transmission
 STX = '\x02'
 # End transmission
@@ -19,8 +18,16 @@ class Connection:
         except serial.SerialException as e:
             print(f"Failed to connect on {port}: {e}")
 
+    def open(self, port):
+        if self.connection.is_open:
+            return
+        try:
+            self.connection = serial.Serial(port, baudrate)
+            print(f"Connected to {port}")
+        except serial.SerialException as e:
+            print(f"Failed to connect on {port}: {e}")
+
     def close(self):
-        # Close the serial connection
         if self.connection and self.connection.is_open:
             self.connection.close()
             print("Connection closed")
