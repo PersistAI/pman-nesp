@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from flask_cors import CORS
-from nesp_lib import Port, Pump, PumpingDirection
+from pump.pump import Pump
 import json
 
 config = {}
@@ -26,14 +26,13 @@ def pmanPush():
     d = json.loads(request.data)
     args = d['args']
     pump = Pump(port, address=int(args[0]))
-    pump.syringe_diameter = app.config['syringe_diameter_mm']
-    pump.pumping_direction = PumpingDirection.INFUSE
-    pump.pumping_volume = float(args[1])
-    pump.pumping_rate = float(args[2])
-    pump.run()
+    pump.set_direction('INF')
+    pump.set_volume(args[0])
+    pump.set_rate(args[1])
+    ret = pump.run()
     return {
             'status': 'ok',
-            'message': 'push completed'
+            'message': ret
             }
     
 @app.route('/pman/pull', methods=['POST'])
@@ -41,14 +40,13 @@ def pmanPull():
     d = json.loads(request.data)
     args = d['args']
     pump = Pump(port, address=int(args[0]))
-    pump.syringe_diameter = app.config['syringe_diameter_mm']
-    pump.pumping_direction = PumpingDirection.WITHDRAW
-    pump.pumping_volume = float(args[0])
-    pump.pumping_rate = float(args[1])
-    pump.run()
+    pump.set_direction('WDR')
+    pump.set_volume(args[0])
+    pump.set_rate(args[1])
+    ret = pump.run()
     return {
             'status': 'ok',
-            'message': 'pull completed'
+            'message': ret
             }
 
 if __name__ == '__main__':
