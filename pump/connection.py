@@ -44,10 +44,12 @@ class Connection:
             print("setting timeout to:",timeout)
             self.connection.timeout = timeout
         while True:
-            data = input("$: ")
+            data = input("$: ") + '\r'
+            if data =='exit\r':
+                return
             if self.connection and self.connection.is_open:
                 self.connection.write(data.encode())
-                response = self.connection.read_until(ETX.encode()).decode().strip()
+                response = self.connection.read_until(ETX.encode())
                 print(response)
             else:
                 print("no connection")
