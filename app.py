@@ -42,7 +42,9 @@ def pmanPush():
     pump.set_direction('INF')
     pump.set_volume(args[1])
     pump.set_rate(args[2])
+    pdb.set_trace()
     ret = pump.run()
+    
     connection.close()
     return {
             'status': 'ok',

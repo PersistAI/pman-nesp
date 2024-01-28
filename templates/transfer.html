@@ -59,7 +59,7 @@
   push_btn.addEventListener("click", () => {
     let vol = document.getElementById("push-vol").value;
     let rate = document.getElementById("push-rate").value;
-    let addr = document.getElementById("pull-address").value;
+    let addr = document.getElementById("push-address").value;
     let args = [addr, vol, rate];
     push(args).then(() => {
       display("push completed");
