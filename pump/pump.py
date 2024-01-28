@@ -19,6 +19,7 @@ class CommandName(str, enum.Enum):
     RUN                = 'RUN'
     RUN_PURGE          = 'PUR'
     STOP               = 'STP'
+    PUMP_MOTOR_OPERATING='ROM' # returns 0 for no or 1 for yes
 
 class Pump:
     """
@@ -47,6 +48,18 @@ class Pump:
         command = CommandName.RUN
         command = self._formatCommand(command)
         return self._sendCommand(command)
+
+    def stop(self):
+        command = self._formatCommand(CommandName.STOP)
+        return self._sendCommand(command)
+
+    def wait_for_motor(self):
+        # Wait for the motor to be done running
+        command = CommandName.PUMP_MOTOR_OPERATING
+        command = self._formatCommand(command)
+        response = self._sendCommand(command)
+        print(response)
+
 
     def set_direction(self, direction):
         """
