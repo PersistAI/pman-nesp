@@ -42,9 +42,8 @@ def pmanPush():
     pump.set_direction('INF')
     pump.set_volume(args[1])
     pump.set_rate(args[2])
-    pdb.set_trace()
     ret = pump.run()
-    
+    pump.wait_for_motor()
     connection.close()
     return {
             'status': 'ok',
@@ -64,6 +63,7 @@ def pmanPull():
     print(pump.set_rate(args[2]))
     time.sleep(1)
     ret = pump.run()
+    pump.wait_for_motor()
     connection.close()
     return {
             'status': 'ok',

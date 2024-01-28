@@ -1,4 +1,5 @@
 import enum
+import time
 from .connection import Connection, STX, ETX, CR
 
 class CommandName(str, enum.Enum):
@@ -57,8 +58,15 @@ class Pump:
         # Wait for the motor to be done running
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
+        # response[-2] is either W, I, or S
+        # W: withdrawing 
+        # I: infusing
+        # S: standby
         response = self._sendCommand(command)
-        print(response)
+        while 'I' in response or 'W' in response:
+            time.sleep(1)
+            response = self._sendCommand(command)
+        return
 
 
     def set_direction(self, direction):
