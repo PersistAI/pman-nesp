@@ -17,6 +17,8 @@ for key in config:
     
 port = app.config['serial_port']
 
+app.connection = Connection(port)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -27,9 +29,7 @@ def transfer():
 
 @app.route('/stop', methods=['GET','POST'])
 def stop():
-    connection = Connection(config['serial_port'])
-    connection.send('STP\r')
-    connection.close()
+    app.connection.send('STP\r')
     return {'status':'ok','message':'stopped'}
 
 
@@ -37,14 +37,12 @@ def stop():
 def pmanPush():
     d = json.loads(request.data)
     args = d['args']
-    connection = Connection(config['serial_port'])
-    pump = Pump(connection, address=int(args[0]))
+    pump = Pump(app.connection, address=int(args[0]))
     pump.set_direction('INF')
     pump.set_volume(args[1])
     pump.set_rate(args[2])
     ret = pump.run()
     pump.wait_for_motor()
-    connection.close()
     return {
             'status': 'ok',
             'message': ret
@@ -54,8 +52,7 @@ def pmanPush():
 def pmanPull():
     d = json.loads(request.data)
     args = d['args']
-    connection = Connection(config['serial_port'])
-    pump = Pump(connection, address=int(args[0]))
+    pump = Pump(app.connection, address=int(args[0]))
     print(pump.set_direction('WDR'))
     print(args[1])
     print(pump.set_volume(args[1]))
@@ -64,7 +61,6 @@ def pmanPull():
     time.sleep(1)
     ret = pump.run()
     pump.wait_for_motor()
-    connection.close()
     return {
             'status': 'ok',
             'message': ret
