@@ -1,4 +1,5 @@
 import serial
+from serial import SerialException
 import random
 import pdb
 import time
@@ -29,7 +30,7 @@ class Connection:
             self.connection = serial.Serial(port, baudrate, timeout=timeout)
             print(f"Connected to {port}")
         except serial.SerialException as e:
-            print(f"Failed to connect on {port}: {e}")
+            raise(SerialException(f"Failed to connect on {port}: {e}"))
 
     def queue_command(self, command_data):
         with self.queue_lock:

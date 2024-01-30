@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+import atexit
 from flask_cors import CORS
 from pump.pump import Pump
 from pump.connection import Connection
@@ -17,7 +18,14 @@ for key in config:
     
 port = app.config['serial_port']
 
-app.connection = Connection(port)
+def cleanup():
+    global connection
+    if connection:
+        connection.close()
+
+global connection
+connection = Connection(app.config['serial_port'])
+atexit.register(cleanup)
 
 @app.route('/')
 def index():
