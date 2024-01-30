@@ -27,16 +27,23 @@ def test_process_queue(mock_serial):
     conn.queue_command('TEST_COMMAND\x03')
     mock_serial.return_value.read_until.return_value = b'RESPONSE'
     # Allow some time for the thread to process the command
-    time.sleep(0.5)
+    time.sleep(0.1)
     assert len(conn.response_queue) == 1
     assert conn.response_queue[0] == 'RESPONSE'
 
 def test_process_2_commands(mock_serial):
+    # show that the queue can handle two near-concurrent commands
     conn = Connection('/dev/test')
     conn.queue_command('COMMAND_1\x03')
     conn.queue_command('COMMAND_2\x03')
-    mock_serial.return_value.read_until.return_value = b'RESPONSE'
+    # on the first call, return "RESPONSE_1"
+    # on the second call, return "RESPONSE_2"
+    mock_serial.return_value.read_until.side_effect = [
+            b'RESPONSE_1',
+            b'RESPONSE_2'
+    ]
     # Allow some time for the thread to process the commands
-    time.sleep(0.2)
-    assert len(conn.response_queue) == 1
-    assert conn.response_queue[0] == 'RESPONSE'
+    time.sleep(0.1)
+    assert len(conn.response_queue) == 2
+    assert conn.response_queue[0] == 'RESPONSE_1'
+    assert conn.response_queue[1] == 'RESPONSE_2'

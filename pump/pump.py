@@ -30,7 +30,7 @@ class Pump:
     <STX>[response data]<ETX>
     """
     def __init__(self, connection, address=0):
-        self.connection = connection
+        self.connection = connection # serial connection manager
         self.address = address
         pass
 
