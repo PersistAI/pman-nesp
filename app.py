@@ -18,15 +18,6 @@ for key in config:
     
 port = app.config['serial_port']
 
-def cleanup():
-    global connection
-    if connection:
-        connection.close()
-
-global connection
-connection = Connection(app.config['serial_port'])
-atexit.register(cleanup)
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -75,4 +66,13 @@ def pmanPull():
             }
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5058)
+    def cleanup():
+        global connection
+        if connection:
+            connection.close()
+    global connection
+    connection = Connection(app.config['serial_port'])
+    atexit.register(cleanup)
+    app.connection = connection
+    # Debug mode must be off to avoid annoying restarts that re-declare connection
+    app.run(debug=False, port=5058)
