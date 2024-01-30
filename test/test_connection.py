@@ -2,7 +2,7 @@ import sys
 import time
 import pdb
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 sys.path.append('..')
 from pump.connection import Connection  # Adjust the import according to your project structure
 
@@ -27,9 +27,16 @@ def test_process_queue(mock_serial):
     conn.queue_command('TEST_COMMAND\x03')
     mock_serial.return_value.read_until.return_value = b'RESPONSE'
     # Allow some time for the thread to process the command
-    time.sleep(0.1)
+    time.sleep(0.3)
     assert len(conn.response_queue) == 1
     assert conn.response_queue[0] == 'RESPONSE'
+
+def test_get_response(mock_serial):
+    conn = Connection('/dev/test')
+    conn.queue_command('TEST_COMMAND\x03')
+    mock_serial.return_value.read_until.return_value = b'RESPONSE'
+    response = conn.get_response()
+    assert response == 'RESPONSE'
 
 def test_process_2_commands(mock_serial):
     # show that the queue can handle two near-concurrent commands
@@ -43,7 +50,7 @@ def test_process_2_commands(mock_serial):
             b'RESPONSE_2'
     ]
     # Allow some time for the thread to process the commands
-    time.sleep(0.1)
+    time.sleep(0.3)
     assert len(conn.response_queue) == 2
     assert conn.response_queue[0] == 'RESPONSE_1'
     assert conn.response_queue[1] == 'RESPONSE_2'

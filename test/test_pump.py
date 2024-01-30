@@ -2,15 +2,10 @@ import sys
 import pdb
 import time
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 sys.path.append('..')
 from pump.pump import Pump
 from pump.connection import Connection
-
-@pytest.fixture
-def mock_serial():
-    with patch('pump.connection.serial.Serial') as mock:
-        yield mock
 
 @pytest.fixture
 def mock_connection():
