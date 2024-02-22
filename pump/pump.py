@@ -29,10 +29,14 @@ class Pump:
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, connection, address=0):
+    def __init__(self, connection, address=0, logger=None):
         self.connection = connection # serial connection manager
         self.address = address
+        self.logger = logger
         pass
+    def _log(self, msg):
+        if self.logger:
+            self.logger.debug(msg)
 
     def _formatCommand(self, command_data):
         """
@@ -88,17 +92,19 @@ class Pump:
         return 'unknown'
 
     def wait_for_motor(self):
-        # Wait for the motor to be done running
+        """ Wait for the motor to enter standby """
+        self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
         response = self._queueCommand(command)
         status = self.parse_response(response)
-
+        self._log(f"pump status: {status}")
         # if it's not in standby, you keep waiting
         while status in ['busy', 'paused', 'error', 'unknown']:
             time.sleep(1)
             response = self._queueCommand(command)
             status = self.parse_response(response)
+            self._log(f"pump status: {status}")
 
         return True
 

@@ -3,5 +3,6 @@
     "serial_port":"COM24",
     "default_pump_rate_mL_per_min":50,
     "baud_rate": 9600,
-    "addresses": [0,1]
+    "addresses": [0,1],
+    "logdir":"logs"
 }
