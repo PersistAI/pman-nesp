@@ -72,6 +72,8 @@ class Pump:
             U: Operational trigger wait (user wait)
             S: standby
             A: alarm
+            '': timeout (because no response)
+
         Returns:
         str: The categorization based on the identified meaning from the response. Possible categories include:
             'busy': Indicates that the system is busy performing a certain operation (e.g., withdrawing, infusing, etc.).
@@ -86,6 +88,16 @@ class Pump:
          ('S',): 'standby',
          ('A',): 'error'
         }
+
+        if response == '':
+            return 'timeout'
+
+        # response format with A? must be parsed differently 
+        # for example, if A? is present, 'S' means stall, not 'standby'
+        # for now, just treat as error
+        if 'A?' in response:
+            return 'error'
+
         for key in meanings:
             if any(letter in response for letter in key):
                 return meanings[key]
@@ -100,12 +112,11 @@ class Pump:
         status = self.parse_response(response)
         self._log(f"response: {response} pump status: {status}")
         # if it's not in standby, you keep waiting
-        while status in ['busy', 'paused', 'error', 'unknown']:
+        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
             time.sleep(1)
             response = self._queueCommand(command)
             status = self.parse_response(response)
             self._log(f"response: {response} pump status: {status}")
-
 
         return True
 
