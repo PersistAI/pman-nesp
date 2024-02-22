@@ -98,7 +98,7 @@ class Pump:
         command = self._formatCommand(command)
         response = self._queueCommand(command)
         status = self.parse_response(response)
-        self._log(f"pump status: {status}")
+        self._log(f"response: {response} pump status: {status}")
         # if it's not in standby, you keep waiting
         while status in ['busy', 'paused', 'error', 'unknown']:
             time.sleep(1)
