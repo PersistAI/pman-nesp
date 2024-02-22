@@ -54,19 +54,53 @@ class Pump:
         command = self._formatCommand(CommandName.STOP)
         return self._queueCommand(command)
 
+    def parse_response(self, response):
+        """
+        Parses the response and categorizes it based on predefined meanings.
+        Args:
+        response (str): The response to be parsed and categorized.
+            response[-2] is one of the below:
+            W: withdrawing 
+            I: infusing
+            T: Timed Pause Phase
+            X: Purging
+            P: Pumping Program Paused
+            U: Operational trigger wait (user wait)
+            S: standby
+            A: alarm
+        Returns:
+        str: The categorization based on the identified meaning from the response. Possible categories include:
+            'busy': Indicates that the system is busy performing a certain operation (e.g., withdrawing, infusing, etc.).
+            'paused': Indicates that the system is in a paused state (e.g., pumping program paused, operational trigger wait, etc.).
+            'standby': Indicates that the system is in a standby state.
+            'error': Indicates that an error has occurred.
+            'unknown': Indicates that the meaning of the response could not be categorized.
+        """
+        meanings = {
+         ('W', 'I', 'T', 'X'): 'busy',
+         ('P', 'U'): 'paused',
+         ('S',): 'standby',
+         ('A',): 'error'
+        }
+        for key in meanings:
+            if any(letter in response for letter in key):
+                return meanings[key]
+        return 'unknown'
+
     def wait_for_motor(self):
         # Wait for the motor to be done running
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
-        # response[-2] is either W, I, or S
-        # W: withdrawing 
-        # I: infusing
-        # S: standby
         response = self._queueCommand(command)
-        while 'I' in response or 'W' in response:
+        status = self.parse_response(response)
+
+        # if it's not in standby, you keep waiting
+        while status in ['busy', 'paused', 'error', 'unknown']:
             time.sleep(1)
             response = self._queueCommand(command)
-        return
+            status = self.parse_response(response)
+
+        return True
 
     def set_direction(self, direction):
         """
