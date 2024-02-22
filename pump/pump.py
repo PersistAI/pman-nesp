@@ -104,7 +104,8 @@ class Pump:
             time.sleep(1)
             response = self._queueCommand(command)
             status = self.parse_response(response)
-            self._log(f"pump status: {status}")
+            self._log(f"response: {response} pump status: {status}")
+
 
         return True
 
