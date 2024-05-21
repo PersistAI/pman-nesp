@@ -50,10 +50,15 @@ def transfer():
     return render_template('transfer.html', **config)
 
 @app.route('/stop', methods=['GET','POST'])
+@app.route('/hardstop', methods=['GET','POST'])
 def stop():
     app.connection.send('STP\r')
     return {'status':'ok','message':'stopped'}
 
+@app.route('/resume', methods=['GET','POST'])
+def resume():
+    app.connection.send('RUN\r')
+    return {'status':'ok','message':'Resuming'}
 
 @app.route('/pman/push', methods=['POST'])
 def pmanPush():
