@@ -40,6 +40,9 @@ def create_app():
     return app
 
 app = create_app()
+# store a list of hardstopped status per address
+# this tells the endpoints to abort if necesary 
+hardstop_flags = [False, False]
 
 @app.route('/')
 def index():
@@ -52,21 +55,38 @@ def transfer():
 @app.route('/stop', methods=['GET','POST'])
 @app.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
+    # set for all addrs, not just the one in current step.
+    for i in range(len(hardstop_flags)):
+        hardstop_flags[i] = True
     app.connection.send('STP\r')
+    # MUST receive response in order to not back up serial port cache
+    response = app.connection.receive() 
     return {'status':'ok','message':'stopped'}
 
 @app.route('/pman/resume', methods=['GET','POST'])
 def resume():
-    pump = Pump(app.connection, address=int(args[0]), logger=app.logger)
+    if request.method == 'POST':
+        d = json.loads(request.data)
+        args = d['args']
+    else:
+        args = [0]
+    addr = int(args[0])
+    # set for all addrs, not just the one in current step.
+    for i in range(len(hardstop_flags)):
+        hardstop_flags[i] = False
+    pump = Pump(app.connection, address=addr, logger=app.logger, hardstop_flags=hardstop_flags)
     app.connection.send('RUN\r')
+    # MUST receive response in order to not back up serial port cach
+    response = app.connection.receive()
     pump.wait_for_motor()
+    
     return {'status':'ok','message':'Resuming'}
 
 @app.route('/pman/push', methods=['POST'])
 def pmanPush():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(app.connection, address=int(args[0]), logger=app.logger)
+    pump = Pump(app.connection, address=int(args[0]), logger=app.logger, hardstop_flags=hardstop_flags)
     pump.set_direction('INF')
     pump.set_volume(args[1])
     pump.set_rate(args[2])
@@ -81,7 +101,7 @@ def pmanPush():
 def pmanPull():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(app.connection, address=int(args[0]),logger=app.logger)
+    pump = Pump(app.connection, address=int(args[0]),logger=app.logger, hardstop_flags=hardstop_flags)
     print(pump.set_direction('WDR'))
     print(args[1])
     print(pump.set_volume(args[1]))

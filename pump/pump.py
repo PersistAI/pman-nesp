@@ -29,10 +29,11 @@ class Pump:
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, connection, address=0, logger=None):
+    def __init__(self, connection, address=0, logger=None, hardstop_flags=[False,False]):
         self.connection = connection # serial connection manager
         self.address = address
         self.logger = logger
+        self.hardstop_flags = hardstop_flags # must be a list so it can be changed from outside
         pass
     def _log(self, msg):
         if self.logger:
@@ -112,11 +113,13 @@ class Pump:
         status = self.parse_response(response)
         self._log(f"response: {response} pump status: {status}")
         # if it's not in standby, you keep waiting
-        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
+        while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not self.hardstop_flags[int(self.address)]:
             time.sleep(1)
             response = self._queueCommand(command)
             status = self.parse_response(response)
             self._log(f"response: {response} pump status: {status}")
+        if self.hardstop_flags[int(self.address)]:
+            self._log(f"hardstop hit -- no longer waiting for pump")
 
         return True
 
