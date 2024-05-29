@@ -57,7 +57,9 @@ def stop():
 
 @app.route('/pman/resume', methods=['GET','POST'])
 def resume():
+    pump = Pump(app.connection, address=int(args[0]), logger=app.logger)
     app.connection.send('RUN\r')
+    pump.wait_for_motor()
     return {'status':'ok','message':'Resuming'}
 
 @app.route('/pman/push', methods=['POST'])
