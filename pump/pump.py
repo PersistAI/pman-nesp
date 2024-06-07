@@ -122,7 +122,7 @@ class Pump:
             self._log(f"hardstop hit -- no longer waiting for pump")
             # now we set the hardstop flag back to False to acknowledge that we have already stopped
             # if we do not do this, the scheduler will never short poll again unless "resume" is hit
-            self.hardstop_flags[int(self.address)] = True
+            self.hardstop_flags[int(self.address)] = False
 
         return True
 
