@@ -39,6 +39,10 @@ class Pump:
         if self.logger:
             self.logger.debug(msg)
 
+    def _formatArg(self,arg):
+        """ take in a float and return a string rounded to 2 decimal places """
+        return str(round(float(arg),2))
+
     def _formatCommand(self, command_data):
         """
         input: command data 
@@ -138,7 +142,7 @@ class Pump:
         """
         volume: units of ML, a float, string, or int
         """
-        volume = str(volume)
+        volume = self._formatArg(volume) # rounds and returns str
         command = CommandName.PUMPING_VOLUME + volume
         command = self._formatCommand(command)
         return self._queueCommand(command)
@@ -147,7 +151,7 @@ class Pump:
         """
         rate: units of mL/Min, a float, string, or int
         """
-        rate = str(rate)
+        rate = self._formatArg(rate) # rounds and returns str
         command = CommandName.PUMPING_RATE + rate
         command = self._formatCommand(command)
         return self._queueCommand(command)
