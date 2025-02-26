@@ -4,7 +4,6 @@ import logging
 import atexit
 from flask_cors import CORS
 from pump.pump import Pump
-from pump.connection import Connection
 import json
 import time
 import pdb
@@ -14,9 +13,6 @@ with open('./config.json') as f:
     config = json.load(f)
 
 def create_app():
-    """
-    Handles most of app creation, but connection is defined elsewhere.
-    """
     app = Flask(__name__)
     CORS(app)
     for key in config:
@@ -116,13 +112,5 @@ def pmanPull():
             }
 
 if __name__ == '__main__':
-    def cleanup():
-        global connection
-        if connection:
-            connection.close()
-    global connection
-    connection = Connection(app.config['serial_port'])
-    atexit.register(cleanup)
-    app.connection = connection
     # Debug mode must be off to avoid annoying restarts that re-declare connection
     app.run(debug=False, port=5058)

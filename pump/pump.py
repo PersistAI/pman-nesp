@@ -1,4 +1,5 @@
 import enum
+import serial
 import time
 from .connection import Connection, STX, ETX, CR
 
@@ -29,12 +30,17 @@ class Pump:
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, connection, address=0, logger=None, hardstop_flags=[False,False]):
-        self.connection = connection # serial connection manager
+    def __init__(self, port, baud:int =9600, address:int=0, logger=None, hardstop_flags=[False,False]):
+        self.ser = serial.Serial(port=port,baudrate=baud)
         self.address = address
         self.logger = logger
         self.hardstop_flags = hardstop_flags # must be a list so it can be changed from outside
         pass
+
+    def send_command(self, data):
+        self.ser.write( data.encode())
+        return self.ser.read_until(ETX.encode()).decode()
+
     def _log(self, msg):
         if self.logger:
             self.logger.debug(msg)
@@ -50,18 +56,14 @@ class Pump:
         """
         return str(self.address) + command_data + CR
 
-    def _queueCommand(self, command_string):
-        self.connection.queue_command(command_string)
-        return self.connection.get_response()
-
     def run(self):
         command = CommandName.RUN
         command = self._formatCommand(command)
-        return self._queueCommand(command)
+        return self.send_command(command)
 
     def stop(self):
         command = self._formatCommand(CommandName.STOP)
-        return self._queueCommand(command)
+        return self.send_command(command)
 
     def parse_response(self, response):
         """
@@ -113,13 +115,13 @@ class Pump:
         self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
-        response = self._queueCommand(command)
+        response = self.send_command(command)
         status = self.parse_response(response)
         self._log(f"response: {response} pump status: {status}")
         # if it's not in standby, you keep waiting
         while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not self.hardstop_flags[int(self.address)]:
             time.sleep(1)
-            response = self._queueCommand(command)
+            response = self.send_command(command)
             status = self.parse_response(response)
             self._log(f"response: {response} pump status: {status}")
         if self.hardstop_flags[int(self.address)]:
@@ -136,7 +138,7 @@ class Pump:
         """
         command = CommandName.PUMPING_DIRECTION + direction.upper()
         command = self._formatCommand(command)
-        return self._queueCommand(command)
+        return self.send_command(command)
 
     def set_volume(self, volume):
         """
@@ -145,7 +147,7 @@ class Pump:
         volume = self._formatArg(volume) # rounds and returns str
         command = CommandName.PUMPING_VOLUME + volume
         command = self._formatCommand(command)
-        return self._queueCommand(command)
+        return self.send_command(command)
 
     def set_rate(self, rate):
         """
@@ -154,8 +156,7 @@ class Pump:
         rate = self._formatArg(rate) # rounds and returns str
         command = CommandName.PUMPING_RATE + rate
         command = self._formatCommand(command)
-        return self._queueCommand(command)
-
+        return self.send_command(command)
 
 if __name__ == "__main__":
     import doctest
