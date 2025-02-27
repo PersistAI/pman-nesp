@@ -1,7 +1,6 @@
 import enum
 import serial
 import time
-from .connection import Connection, STX, ETX, CR
 
 class CommandName(str, enum.Enum):
     """
@@ -30,11 +29,10 @@ class Pump:
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, port, baud:int =9600, address:int=0, logger=None, hardstop_flags=[False,False]):
+    def __init__(self, port, baud:int =9600, address:int=0, logger=None):
         self.ser = serial.Serial(port=port,baudrate=baud)
         self.address = address
         self.logger = logger
-        self.hardstop_flags = hardstop_flags # must be a list so it can be changed from outside
         pass
 
     def send_command(self, data):
@@ -119,16 +117,11 @@ class Pump:
         status = self.parse_response(response)
         self._log(f"response: {response} pump status: {status}")
         # if it's not in standby, you keep waiting
-        while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not self.hardstop_flags[int(self.address)]:
+        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
             time.sleep(1)
             response = self.send_command(command)
             status = self.parse_response(response)
             self._log(f"response: {response} pump status: {status}")
-        if self.hardstop_flags[int(self.address)]:
-            self._log(f"hardstop hit -- no longer waiting for pump")
-            # now we set the hardstop flag back to False to acknowledge that we have already stopped
-            # if we do not do this, the scheduler will never short poll again unless "resume" is hit
-            self.hardstop_flags[int(self.address)] = False
 
         return True
 
