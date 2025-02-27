@@ -37,7 +37,7 @@ app = create_app()
 
 @app.route('/')
 def index():
-    return render_template('transfer.html', **config)
+    return render_template('index.html', **config)
 
 def get_pump(addr=0):
      port = config['serial_port']

@@ -1,30 +1,70 @@
-{% extends "layout.html" %}
-{% block head%}
-<style>
-.q_grid{
-	display: grid;
-}
-
-</style>
-{% endblock %}
-{% block content%}
-<h2>Query</h2>
-<div class="q_grid">
-  <button type="button" onclick="oneResponseCommand('Q')">Status</button>
-  <button type="button" onclick="oneResponseCommand('?4')">Actual Syringe Position</button>
-  <button type="button" onclick="oneResponseCommand('?2')">Maximum Velocity</button>
-  <button type="button" onclick="displayBufferStatus()">Command Buffer Status</button>
+{% extends "layout.html" %} {% block head%}
+{% endblock %} {% block content%}
+<div id="main-container">
+  <div>
+    <h3>Pull</h3>
+    <form id="pull">
+      <label for="pull-address">Address</label>
+      <select value="" name="pull-address" id="pull-address">
+        {% for address in addresses %}
+        <option>{{address}}</option>
+        {% endfor %}
+      </select>
+      <label for="pull-vol">Volume</label>
+      <input type="text" value="" name="pull-vol" id="pull-vol" />
+      <label for="pull-rate">Pump Rate (mL/min)</label>
+      <input type="text" value="" name="pull-rate" id="pull-rate" />
+      <button class="execute" type="button" onclick="startPull()">Submit</button>
+    </form>
+  </div>
+  <div
+  >
+    <button class="stop-btn" type="button" onclick="fetch('/stop')">
+      STOP
+    </button>
+  </div>
+  <div>
+    <h3>Push</h3>
+    <form id="push">
+      <label for="push-address">Address</label>
+      <select value="" name="push-address" id="push-address">
+        {% for address in addresses %}
+        <option>{{address}}</option>
+        {% endfor %}
+      </select>
+      <label for="push-vol">Volume</label>
+      <input type="text" value="" name="push-vol" id="push-vol" />
+      <label for="push-rate">Pump Rate (mL/min)</label>
+      <input type="text" value="" name="push-rate" id="push-rate" />
+      <button class="execute" type="button" onclick="startPush()">Submit</button>
+    </form>
+  </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-  async function displayBufferStatus(){
-    if(await bufferIsEmpty()){
-      display("buffer empty")
-    } else {
-      display("buffer not empty")
-    }
-  }
+  enforceCharset("pull-vol", digits + ".");
+  enforceCharset("push-vol", digits + ".");
+  enforceCharset("pull-rate", digits + ".");
+  enforceCharset("push-rate", digits + ".");
+
+  function startPull() {
+    let vol = document.getElementById("pull-vol").value;
+    let rate = document.getElementById("pull-rate").value;
+    let addr = document.getElementById("pull-address").value;
+    let args = [addr, vol, rate];
+    pull(args).then(() => {
+      display("pull completed");
+    });
+  });
+
+  function startPush() {
+    let vol = document.getElementById("push-vol").value;
+    let rate = document.getElementById("push-rate").value;
+    let addr = document.getElementById("push-address").value;
+    let args = [addr, vol, rate];
+    push(args).then(() => {
+      display("push completed");
+    });
+  });
 </script>
-{% endblock %}
+{% endblock%}
