@@ -1,70 +1,55 @@
-{% extends "layout.html" %} {% block head%}
-{% endblock %} {% block content%}
-<div id="main-container">
-  <div>
-    <h3>Pull</h3>
-    <form id="pull">
-      <label for="pull-address">Address</label>
-      <select value="" name="pull-address" id="pull-address">
+{% extends "layout.html" %} {% block head%} {% endblock %} {% block content%}
+<div id="form-container">
+    <form>
+      <h3>NESP Control Interface</h3>
+      <label for="address">Address</label>
+      <select value="" name="address" id="address">
         {% for address in addresses %}
         <option>{{address}}</option>
         {% endfor %}
       </select>
-      <label for="pull-vol">Volume</label>
-      <input type="text" value="" name="pull-vol" id="pull-vol" />
-      <label for="pull-rate">Pump Rate (mL/min)</label>
-      <input type="text" value="" name="pull-rate" id="pull-rate" />
-      <button class="execute" type="button" onclick="startPull()">Submit</button>
+      <label for="vol">Volume (mL)</label>
+      <input type="text" value="" name="vol" id="vol" />
+      <label for="rate">Pump Rate (mL/min)</label>
+      <input type="text" value="" name="rate" id="rate" />
+      <div class="btn-container">
+        <button class="execute" type="button" onclick="startPull()">
+          Pull
+        </button>
+        <button class="execute" type="button" onclick="startPush()">
+          Push
+        </button>
+        <button class="stop" type="button" onclick="fetch('/stop')">
+          STOP
+        </button>
+      </div>
     </form>
-  </div>
-  <div
-  >
-    <button class="stop-btn" type="button" onclick="fetch('/stop')">
-      STOP
-    </button>
-  </div>
-  <div>
-    <h3>Push</h3>
-    <form id="push">
-      <label for="push-address">Address</label>
-      <select value="" name="push-address" id="push-address">
-        {% for address in addresses %}
-        <option>{{address}}</option>
-        {% endfor %}
-      </select>
-      <label for="push-vol">Volume</label>
-      <input type="text" value="" name="push-vol" id="push-vol" />
-      <label for="push-rate">Pump Rate (mL/min)</label>
-      <input type="text" value="" name="push-rate" id="push-rate" />
-      <button class="execute" type="button" onclick="startPush()">Submit</button>
-    </form>
-  </div>
 </div>
 {% endblock %} {% block scripts %}
 <script>
-  enforceCharset("pull-vol", digits + ".");
-  enforceCharset("push-vol", digits + ".");
-  enforceCharset("pull-rate", digits + ".");
-  enforceCharset("push-rate", digits + ".");
+  enforceCharset("vol", digits + ".");
+  enforceCharset("rate", digits + ".");
 
   function startPull() {
-    let vol = document.getElementById("pull-vol").value;
-    let rate = document.getElementById("pull-rate").value;
-    let addr = document.getElementById("pull-address").value;
+    let vol = document.getElementById("vol").value;
+    let rate = document.getElementById("rate").value;
+    let addr = document.getElementById("address").value;
     let args = [addr, vol, rate];
     pull(args).then(() => {
       display("pull completed");
     });
-  });
+  }
 
   function startPush() {
-    let vol = document.getElementById("push-vol").value;
-    let rate = document.getElementById("push-rate").value;
-    let addr = document.getElementById("push-address").value;
+    let vol = document.getElementById("vol").value;
+    let rate = document.getElementById("rate").value;
+    let addr = document.getElementById("address").value;
     let args = [addr, vol, rate];
     push(args).then(() => {
       display("push completed");
     });
-  });
+  }
+
+  display("Welcome to NESP")
 </script>
 {% endblock%}
