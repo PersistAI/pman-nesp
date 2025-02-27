@@ -8,15 +8,13 @@ import json
 import time
 import pdb
 
-config = {}
 with open('./config.json') as f:
     config = json.load(f)
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    for key in config:
-        app.config[key] = config[key]
+    app.config.update(config)
         
     port = app.config['serial_port']
 
@@ -39,19 +37,18 @@ app = create_app()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-@app.route('/transfer')
-def transfer():
     return render_template('transfer.html', **config)
+
+def get_pump(addr=0):
+     port = config['serial_port']
+     return Pump(port, address=addr, logger=app.logger)
 
 @app.route('/stop', methods=['GET','POST'])
 @app.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
-    # set for all addrs, not just the one in current step.
-    app.connection.send('STP\r')
-    # MUST receive response in order to not back up serial port cache
-    response = app.connection.receive() 
+    for addr in config.get("addresses", [0]):
+        pump = get_pump(addr)
+        pump.stop()
     return {'status':'ok','message':'stopped'}
 
 @app.route('/pman/resume', methods=['GET','POST'])
@@ -62,11 +59,8 @@ def resume():
     else:
         args = [0]
     addr = int(args[0])
-    # set for all addrs, not just the one in current step.
-    pump = Pump(app.connection, address=addr, logger=app.logger)
-    app.connection.send('RUN\r')
-    # MUST receive response in order to not back up serial port cach
-    response = app.connection.receive()
+    pump = get_pump(addr)
+    pump.run()
     pump.wait_for_motor()
     
     return {'status':'ok','message':'Resuming'}
@@ -75,7 +69,8 @@ def resume():
 def pmanPush():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(app.connection, address=int(args[0]), logger=app.logger)
+    addr = int(args[0])
+    pump = get_pump(addr)
     pump.set_direction('INF')
     pump.set_volume(args[1])
     pump.set_rate(args[2])
@@ -90,13 +85,11 @@ def pmanPush():
 def pmanPull():
     d = json.loads(request.data)
     args = d['args']
-    pump = Pump(app.connection, address=int(args[0]),logger=app.logger)
-    print(pump.set_direction('WDR'))
-    print(args[1])
-    print(pump.set_volume(args[1]))
-    print(args[2])
-    print(pump.set_rate(args[2]))
-    time.sleep(1)
+    addr = int(args[0])
+    pump = get_pump(addr)
+    pump.set_direction('WDR')
+    pump.set_volume(args[1])
+    pump.set_rate(args[2])
     ret = pump.run()
     pump.wait_for_motor()
     return {
@@ -105,5 +98,4 @@ def pmanPull():
             }
 
 if __name__ == '__main__':
-    # Debug mode must be off to avoid annoying restarts that re-declare connection
-    app.run(debug=False, port=5058)
+    app.run(debug=True, port=5058)

@@ -2,6 +2,10 @@ import enum
 import serial
 import time
 
+ETX = '\x03'
+STX = '\x02'
+CR = '\r'
+
 class CommandName(str, enum.Enum):
     """
     Exists to make autocomplete easier
