@@ -1,6 +1,15 @@
 import enum
 import serial
 import time
+import threading
+
+serial_lock = threading.Lock()
+
+# windows does not let us share com ports, so we use these flags
+# to tell the polling functions to stop hogging the serial lines 
+# when it is time to stop
+
+emergency_stop_flag = threading.Event()
 
 ETX = '\x03'
 STX = '\x02'
@@ -33,8 +42,8 @@ class Pump:
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, port, baud:int =9600, address:int=0, logger=None):
-        self.ser = serial.Serial(port=port,baudrate=baud)
+    def __init__(self, ser, address:int=0, logger=None):
+        self.ser = ser
         self.address = address
         self.logger = logger
         pass
@@ -59,13 +68,17 @@ class Pump:
         return str(self.address) + command_data + CR
 
     def run(self):
-        command = CommandName.RUN
-        command = self._formatCommand(command)
-        return self.send_command(command)
+        with serial_lock:
+            command = CommandName.RUN
+            command = self._formatCommand(command)
+            r = self.send_command(command)
+        return r
 
     def stop(self):
-        command = self._formatCommand(CommandName.STOP)
-        return self.send_command(command)
+        with serial_lock:
+            command = self._formatCommand(CommandName.STOP)
+            r = self.send_command(command)
+        return r
 
     def parse_response(self, response):
         """
@@ -117,43 +130,48 @@ class Pump:
         self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
-        response = self.send_command(command)
-        status = self.parse_response(response)
-        self._log(f"response: {response} pump status: {status}")
-        # if it's not in standby, you keep waiting
-        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
-            time.sleep(1)
+        with serial_lock:
             response = self.send_command(command)
             status = self.parse_response(response)
             self._log(f"response: {response} pump status: {status}")
-
+            # if it's not in standby, you keep waiting
+            while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not emergency_stop_flag.is_set():
+                time.sleep(0.25)
+                response = self.send_command(command)
+                status = self.parse_response(response)
         return True
 
     def set_direction(self, direction):
         """
         direction: either INF or WDR
         """
-        command = CommandName.PUMPING_DIRECTION + direction.upper()
-        command = self._formatCommand(command)
-        return self.send_command(command)
+        with serial_lock:
+            command = CommandName.PUMPING_DIRECTION + direction.upper()
+            command = self._formatCommand(command)
+            r = self.send_command(command)
+        return r
 
     def set_volume(self, volume):
         """
         volume: units of ML, a float, string, or int
         """
-        volume = self._formatArg(volume) # rounds and returns str
-        command = CommandName.PUMPING_VOLUME + volume
-        command = self._formatCommand(command)
-        return self.send_command(command)
+        with serial_lock:
+            volume = self._formatArg(volume) # rounds and returns str
+            command = CommandName.PUMPING_VOLUME + volume
+            command = self._formatCommand(command)
+            r = self.send_command(command)
+        return r
 
     def set_rate(self, rate):
         """
         rate: units of mL/Min, a float, string, or int
         """
-        rate = self._formatArg(rate) # rounds and returns str
-        command = CommandName.PUMPING_RATE + rate
-        command = self._formatCommand(command)
-        return self.send_command(command)
+        with serial_lock:
+            rate = self._formatArg(rate) # rounds and returns str
+            command = CommandName.PUMPING_RATE + rate
+            command = self._formatCommand(command)
+            ret = self.send_command(command)
+        return ret
 
 if __name__ == "__main__":
     import doctest

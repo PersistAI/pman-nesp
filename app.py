@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request
+import warnings
+import threading
 import os
 import logging
 import atexit
 from flask_cors import CORS
-from pump.pump import Pump
+from serial import SerialException, Serial
+from pump.pump import Pump, serial_lock, emergency_stop_flag
 import json
 import time
 import pdb
@@ -16,8 +19,6 @@ def create_app():
     CORS(app)
     app.config.update(config)
         
-    port = app.config['serial_port']
-
     logdir = config['logdir']
     if not os.path.isdir(logdir):
         os.makedirs(logdir)
@@ -35,21 +36,37 @@ def create_app():
 
 app = create_app()
 
+
+# the app must have one global serial connection
+# because windows makes it super annoying to have multiple serial connections trying to share one port
+# It does not let you set exclusive=False
+try:
+    ser = Serial(
+            baudrate=config.get('baud_rate', 19200),
+            port=config.get('serial_port')
+            )
+except SerialException:
+    serial = None
+    port=config.get('serial_port')
+    warnings.warn(f'Could not open port {port}, running without a connection')
+
 @app.route('/')
 def index():
     return render_template('index.html', **config)
 
 def get_pump(addr=0):
-     port = config['serial_port']
-     return Pump(port, address=addr, logger=app.logger)
+     return Pump(ser=ser, address=addr, logger=app.logger)
 
 @app.route('/stop', methods=['GET','POST'])
 @app.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
-    for addr in config.get("addresses", [0]):
-        pump = get_pump(addr)
-        pump.stop()
-    return {'status':'ok','message':'stopped'}
+    # this flag tells the poller to stop polling
+    emergency_stop_flag.set()
+    pump = get_pump()
+    with serial_lock: # the lock makes sure that polling is done before stop command is sent
+        pump.ser.write(b'STP\r') # command without addr should broadcast
+        response = pump.ser.readall()
+    return {'status':'ok','message':response}
 
 @app.route('/pman/resume', methods=['GET','POST'])
 def resume():
@@ -62,7 +79,6 @@ def resume():
     pump = get_pump(addr)
     pump.run()
     pump.wait_for_motor()
-    
     return {'status':'ok','message':'Resuming'}
 
 @app.route('/pman/push', methods=['POST'])
