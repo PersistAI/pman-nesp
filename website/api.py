@@ -12,7 +12,7 @@ def stop():
     pump = get_pump(addr=0)
     with serial_lock: # the lock makes sure that polling is done before stop command is sent
         pump.ser.write(b'STP\r') # command without addr should broadcast
-        response = pump.ser.readall()
+        response = pump.ser.readall().decode()
     return {'status':'ok','message':response}
 
 @api.route('/pman/resume', methods=['GET','POST'])
