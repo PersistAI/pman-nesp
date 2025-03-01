@@ -6,6 +6,7 @@ import time
 import threading
 
 serial_lock = threading.Lock()
+POLL_INTERVAL = 0.1
 
 # windows does not let us share com ports, so we use these flags
 # to tell the polling functions to stop hogging the serial lines 
@@ -155,7 +156,7 @@ class Pump:
             self._log(f"response: {response} pump status: {status}")
             # if it's not in standby, you keep waiting
             while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not emergency_stop_flag.is_set():
-                time.sleep(0.25)
+                time.sleep(POLL_INTERVAL)
                 response = self.send_command(command)
                 status = self.parse_response(response)
         return True

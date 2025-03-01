@@ -1,6 +1,7 @@
 from flask import Blueprint, request, current_app, render_template
+import time
 import json
-from pump.pump import serial_lock, emergency_stop_flag, get_pump
+from pump.pump import serial_lock, emergency_stop_flag, get_pump, POLL_INTERVAL
 
 api = Blueprint('api', __name__)
 
@@ -9,6 +10,7 @@ api = Blueprint('api', __name__)
 def stop():
     # this flag tells the poller to stop polling
     emergency_stop_flag.set() 
+    time.sleep(POLL_INTERVAL + 0.05) # allow the pumps to finish polling if that is what they are doing
     pump = get_pump(addr=0)
     with serial_lock: # the lock makes sure that polling is done before stop command is sent
         pump.ser.write(b'1STP\r') # command without addr should broadcast
