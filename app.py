@@ -114,4 +114,4 @@ def pmanPull():
             }
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5058)
+    app.run(debug=True, port=5058, host='0.0.0.0')
