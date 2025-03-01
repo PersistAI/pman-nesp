@@ -1,4 +1,4 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, render_template
 import json
 from pump.pump import serial_lock, emergency_stop_flag, get_pump
 
