@@ -79,6 +79,13 @@ class PumpManager:
             r = self.send_command(command)
         return r
 
+    def stop_all(self, address_array):
+        commands = [self._formatCommand(CommandName.STOP, addr) for addr in address_array]
+        for cmd in commands:
+            self.ser.write(cmd.encode())
+        responses = self.ser.readall()
+        return responses
+
     def stop(self, address):
         with serial_lock:
             command = self._formatCommand(CommandName.STOP, address)

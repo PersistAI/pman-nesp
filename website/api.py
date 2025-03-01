@@ -9,16 +9,21 @@ api = Blueprint('api', __name__)
 @api.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
     if request.method != 'POST':
-        addr = 0
+        addr = None
     elif not request.json:
-        addr = 0
+        addr = None
     elif 'args' in request.json:
         addr = request.json['args'][0]
     else:
-        addr = 0
+        addr = None
 
     pump = current_app.config['pump']
-    response = pump.stop(addr)
+    address_array = current_app.config['addresses']
+
+    if addr == None:
+        response = pump.stop_all(address_array)
+    else:
+        response = pump.stop(addr)
 
     return {'status':'ok','message':response}
 
@@ -60,7 +65,7 @@ def pmanPull():
     pump.set_direction(addr, 'WDR')
     pump.set_volume(addr, args[1])
     pump.set_rate(addr, args[2])
-    ret = pump.run()
+    ret = pump.run(addr)
     pump.wait_for_motor()
     return {
             'status': 'ok',
