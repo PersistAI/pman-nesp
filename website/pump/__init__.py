@@ -51,9 +51,6 @@ class PumpManager:
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.logger = logger
 
-    def __del__(self):
-        self.ser.close();
-
     def send_command(self, data):
         self.ser.write( data.encode())
         return self.ser.read_until(ETX.encode()).decode()
