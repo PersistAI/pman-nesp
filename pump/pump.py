@@ -1,4 +1,6 @@
 import enum
+import warnings
+from flask import current_app
 import serial
 import time
 import threading
@@ -14,6 +16,19 @@ emergency_stop_flag = threading.Event()
 ETX = '\x03'
 STX = '\x02'
 CR = '\r'
+
+def get_pump(addr):
+    try:
+        ser = serial.Serial(
+                baudrate=current_app.config.get('baud_rate', 19200),
+                port=current_app.config.get('serial_port')
+                )
+    except serial.SerialException as e:
+        ser= None
+        port=current_app.config.get('serial_port')
+        warnings.warn(f'Could not open port {port}, running without a connection')
+        warnings.warn(f'Error: {e}')
+    return Pump(ser=ser, address=addr, logger=current_app.logger)
 
 class CommandName(str, enum.Enum):
     """
@@ -47,6 +62,9 @@ class Pump:
         self.address = address
         self.logger = logger
         pass
+
+    def __del__(self):
+        self.ser.close();
 
     def send_command(self, data):
         self.ser.write( data.encode())
