@@ -21,7 +21,8 @@ def get_pump(addr):
     try:
         ser = serial.Serial(
                 baudrate=current_app.config.get('baud_rate', 19200),
-                port=current_app.config.get('serial_port')
+                port=current_app.config.get('serial_port'),
+                timeout=0.5
                 )
     except serial.SerialException as e:
         ser= None
