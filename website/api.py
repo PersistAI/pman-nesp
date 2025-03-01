@@ -8,11 +8,12 @@ api = Blueprint('api', __name__)
 @api.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
     # this flag tells the poller to stop polling
-    emergency_stop_flag.set()
+    emergency_stop_flag.set() 
     pump = get_pump(addr=0)
     with serial_lock: # the lock makes sure that polling is done before stop command is sent
-        pump.ser.write(b'STP\r') # command without addr should broadcast
+        pump.ser.write(b'1STP\r') # command without addr should broadcast
         response = pump.ser.readall().decode()
+        emergency_stop_flag.clear()  # can be cleared now. Anyone who polls will simply see their pump done.
     return {'status':'ok','message':response}
 
 @api.route('/pman/resume', methods=['GET','POST'])
