@@ -37,6 +37,8 @@
     let args = [addr, vol, rate];
     pull(args).then(() => {
       display("pull completed");
+    }).catch ((error) => {
+      display("Error: " + error.message, 'text-danger');
     });
   }
 
@@ -47,6 +49,8 @@
     let args = [addr, vol, rate];
     push(args).then(() => {
       display("push completed");
+    }).catch ((error) => {
+      display("Error: " + error.message, 'text-danger');
     });
   }
 
