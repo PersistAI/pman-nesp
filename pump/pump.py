@@ -150,13 +150,10 @@ class Pump:
         self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command)
-        with serial_lock:
-            response = self.send_command(command)
-            status = self.parse_response(response)
-            self._log(f"response: {response} pump status: {status}")
-            # if it's not in standby, you keep waiting
-            while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not emergency_stop_flag.is_set():
-                time.sleep(POLL_INTERVAL)
+        status = 'OwO'
+        while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not emergency_stop_flag.is_set():
+            time.sleep(POLL_INTERVAL)
+            with serial_lock:
                 response = self.send_command(command)
                 status = self.parse_response(response)
         return True
