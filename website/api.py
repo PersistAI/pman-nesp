@@ -10,10 +10,10 @@ api = Blueprint('api', __name__)
 def stop():
     # this flag tells the poller to stop polling
     emergency_stop_flag.set() 
-    time.sleep(POLL_INTERVAL + 0.05) # allow the pumps to finish polling if that is what they are doing
+    time.sleep(POLL_INTERVAL + 0.2) # allow the pumps to finish polling if that is what they are doing
     pump = get_pump(addr=0)
     with serial_lock: # the lock makes sure that polling is done before stop command is sent
-        pump.ser.write(b'1STP\r') # command without addr should broadcast
+        pump.ser.write(b'1STP\r')
         response = pump.ser.readall().decode()
         emergency_stop_flag.clear()  # can be cleared now. Anyone who polls will simply see their pump done.
     return {'status':'ok','message':response}
