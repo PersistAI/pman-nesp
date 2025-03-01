@@ -4,6 +4,7 @@ from flask import current_app
 import serial
 import time
 import threading
+import asyncio
 
 serial_lock = threading.Lock()
 POLL_INTERVAL = 0.1
@@ -12,25 +13,9 @@ POLL_INTERVAL = 0.1
 # to tell the polling functions to stop hogging the serial lines 
 # when it is time to stop
 
-emergency_stop_flag = threading.Event()
-
 ETX = '\x03'
 STX = '\x02'
 CR = '\r'
-
-def get_pump(addr):
-    try:
-        ser = serial.Serial(
-                baudrate=current_app.config.get('baud_rate', 19200),
-                port=current_app.config.get('serial_port'),
-                timeout=0.5
-                )
-    except serial.SerialException as e:
-        ser= None
-        port=current_app.config.get('serial_port')
-        warnings.warn(f'Could not open port {port}, running without a connection')
-        warnings.warn(f'Error: {e}')
-    return Pump(ser=ser, address=addr, logger=current_app.logger)
 
 class CommandName(str, enum.Enum):
     """
@@ -52,18 +37,19 @@ class CommandName(str, enum.Enum):
     STOP               = 'STP'
     PUMP_MOTOR_OPERATING='ROM' # returns 0 for no or 1 for yes
 
-class Pump:
+class PumpManager:
     """
+    Manages the entire line of pumps
+    Can't have one object per pump due to serial line getting clogged
+
     Basic mode command:
     [command data]<CR>
     Basic mode response:
     <STX>[response data]<ETX>
     """
-    def __init__(self, ser, address:int=0, logger=None):
-        self.ser = ser
-        self.address = address
+    def __init__(self, port, baudrate=19200, timeout=1, logger=None):
+        self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.logger = logger
-        pass
 
     def __del__(self):
         self.ser.close();
@@ -80,23 +66,25 @@ class Pump:
         """ take in a float and return a string rounded to 2 decimal places """
         return str(round(float(arg),2))
 
-    def _formatCommand(self, command_data):
+    def _formatCommand(self, command_data, address=''):
         """
         input: command data 
         output: command string ready to send
+        address: addr of the target pump
+            if no addr is provided, the first connected pump will receive the instructions
         """
-        return str(self.address) + command_data + CR
+        return str(address) + command_data + CR
 
-    def run(self):
+    def run(self, address):
         with serial_lock:
             command = CommandName.RUN
-            command = self._formatCommand(command)
+            command = self._formatCommand(command, address)
             r = self.send_command(command)
         return r
 
-    def stop(self):
+    def stop(self, address):
         with serial_lock:
-            command = self._formatCommand(CommandName.STOP)
+            command = self._formatCommand(CommandName.STOP, address)
             r = self.send_command(command)
         return r
 
@@ -145,48 +133,48 @@ class Pump:
                 return meanings[key]
         return 'unknown'
 
-    def wait_for_motor(self):
+    async def wait_for_motor(self, address):
         """ Wait for the motor to enter standby """
         self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
-        command = self._formatCommand(command)
+        command = self._formatCommand(command, address)
         status = 'OwO'
-        while status in ['busy', 'paused', 'error', 'unknown','timeout'] and not emergency_stop_flag.is_set():
-            time.sleep(POLL_INTERVAL)
+        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
+            await asyncio.sleep(POLL_INTERVAL)
             with serial_lock:
                 response = self.send_command(command)
-                status = self.parse_response(response)
+            status = self.parse_response(response)
         return True
 
-    def set_direction(self, direction):
+    def set_direction(self, address, direction):
         """
         direction: either INF or WDR
         """
         with serial_lock:
             command = CommandName.PUMPING_DIRECTION + direction.upper()
-            command = self._formatCommand(command)
+            command = self._formatCommand(command, address)
             r = self.send_command(command)
         return r
 
-    def set_volume(self, volume):
+    def set_volume(self, address, volume):
         """
         volume: units of ML, a float, string, or int
         """
         with serial_lock:
             volume = self._formatArg(volume) # rounds and returns str
             command = CommandName.PUMPING_VOLUME + volume
-            command = self._formatCommand(command)
+            command = self._formatCommand(command, address)
             r = self.send_command(command)
         return r
 
-    def set_rate(self, rate):
+    def set_rate(self, address, rate):
         """
         rate: units of mL/Min, a float, string, or int
         """
         with serial_lock:
             rate = self._formatArg(rate) # rounds and returns str
             command = CommandName.PUMPING_RATE + rate
-            command = self._formatCommand(command)
+            command = self._formatCommand(command, address)
             ret = self.send_command(command)
         return ret
 

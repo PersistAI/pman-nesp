@@ -1,21 +1,25 @@
 from flask import Blueprint, request, current_app, render_template
+import asyncio
 import time
 import json
-from pump.pump import serial_lock, emergency_stop_flag, get_pump, POLL_INTERVAL
 
 api = Blueprint('api', __name__)
 
 @api.route('/stop', methods=['GET','POST'])
 @api.route('/pman/hardstop', methods=['GET','POST'])
 def stop():
-    # this flag tells the poller to stop polling
-    emergency_stop_flag.set() 
-    time.sleep(POLL_INTERVAL + 0.2) # allow the pumps to finish polling if that is what they are doing
-    pump = get_pump(addr=0)
-    with serial_lock: # the lock makes sure that polling is done before stop command is sent
-        pump.ser.write(b'1STP\r')
-        response = pump.ser.readall().decode()
-        emergency_stop_flag.clear()  # can be cleared now. Anyone who polls will simply see their pump done.
+    if request.method != 'POST':
+        addr = 0
+    elif not request.json:
+        addr = 0
+    elif 'args' in request.json:
+        addr = request.json['args'][0]
+    else:
+        addr = 0
+
+    pump = current_app.config['pump']
+    response = pump.stop(addr=addr)
+
     return {'status':'ok','message':response}
 
 @api.route('/pman/resume', methods=['GET','POST'])
@@ -26,9 +30,9 @@ def resume():
     else:
         args = [0]
     addr = int(args[0])
-    pump = get_pump(addr)
-    pump.run()
-    pump.wait_for_motor()
+    pump = current_app.config['pump']
+    pump.run(addr)
+    asyncio.run(pump.wait_for_motor(addr))
     return {'status':'ok','message':'Resuming'}
 
 @api.route('/pman/push', methods=['POST'])
@@ -36,12 +40,12 @@ def pmanPush():
     d = json.loads(request.data)
     args = d['args']
     addr = int(args[0])
-    pump = get_pump(addr)
-    pump.set_direction('INF')
-    pump.set_volume(args[1])
-    pump.set_rate(args[2])
-    ret = pump.run()
-    pump.wait_for_motor()
+    pump = current_app.config['pump']
+    pump.set_direction(addr, 'INF')
+    pump.set_volume(addr, args[1])
+    pump.set_rate(addr, args[2])
+    ret = pump.run(addr)
+    asyncio.run(pump.wait_for_motor(addr))
     return {
             'status': 'ok',
             'message': ret
@@ -52,10 +56,10 @@ def pmanPull():
     d = json.loads(request.data)
     args = d['args']
     addr = int(args[0])
-    pump = get_pump(addr)
-    pump.set_direction('WDR')
-    pump.set_volume(args[1])
-    pump.set_rate(args[2])
+    pump = current_app.config['pump']
+    pump.set_direction(addr, 'WDR')
+    pump.set_volume(addr, args[1])
+    pump.set_rate(addr, args[2])
     ret = pump.run()
     pump.wait_for_motor()
     return {
