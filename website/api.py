@@ -18,7 +18,7 @@ def stop():
         addr = 0
 
     pump = current_app.config['pump']
-    response = pump.stop(addr=addr)
+    response = pump.stop(addr)
 
     return {'status':'ok','message':response}
 
