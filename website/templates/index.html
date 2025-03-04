@@ -19,7 +19,7 @@
         <button class="execute" type="button" onclick="startPush()">
           Push
         </button>
-        <button class="stop" type="button" onclick="fetch('/stop')">
+        <button class="stop" type="button" onclick="stop()">
           STOP
         </button>
       </div>
@@ -52,6 +52,16 @@
     }).catch ((error) => {
       display("Error: " + error.message, 'text-danger');
     });
+  }
+
+  async function stop(){
+    let r = await fetch('/stop')
+    if(r.ok){
+    let j = await r.json()
+    display(j.message, 'text-success')
+    } else {
+    display("Error: failed to stop", 'text-danger')
+    }
   }
 
   display("Welcome to NESP")

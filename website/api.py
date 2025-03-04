@@ -25,7 +25,7 @@ def stop():
     else:
         response = pump.stop(addr)
 
-    return {'status':'ok','message':response.decode()}
+    return {'status':'ok','message':f'Stopped with response: {response.decode()}'}
 
 @api.route('/pman/resume', methods=['GET','POST'])
 def resume():
