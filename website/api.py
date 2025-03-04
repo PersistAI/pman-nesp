@@ -66,7 +66,7 @@ def pmanPull():
     pump.set_volume(addr, args[1])
     pump.set_rate(addr, args[2])
     ret = pump.run(addr)
-    pump.wait_for_motor(addr)
+    asyncio.run(pump.wait_for_motor(addr))
     return {
             'status': 'ok',
             'message': ret
