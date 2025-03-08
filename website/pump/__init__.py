@@ -178,7 +178,7 @@ class PumpManager:
         """
         with serial_lock:
             rate = self._formatArg(rate) # rounds and returns str
-            command = f'RAT {rate} ML/MIN'
+            command = f'RAT{rate}'
             command = self._formatCommand(command, address)
             ret = self.send_command(command)
         return ret
