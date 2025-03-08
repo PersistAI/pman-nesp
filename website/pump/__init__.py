@@ -178,10 +178,19 @@ class PumpManager:
         """
         with serial_lock:
             rate = self._formatArg(rate) # rounds and returns str
-            command = CommandName.PUMPING_RATE + rate
+            command = f'RAT {rate} ML/MIN'
             command = self._formatCommand(command, address)
             ret = self.send_command(command)
         return ret
+
+    def set_diameter(self, address, diameter_mm):
+        with serial_lock:
+            diameter_mm = self._formatArg(diameter_mm) # rounds and returns str
+            command = f'DIA {diameter_mm}'
+            command = self._formatCommand(command, address)
+            ret = self.send_command(command)
+        return ret
+
 
 if __name__ == "__main__":
     import doctest
