@@ -7,7 +7,7 @@ import threading
 import asyncio
 
 serial_lock = threading.Lock()
-POLL_INTERVAL = 0.1
+POLL_INTERVAL = 0.5
 
 # windows does not let us share com ports, so we use these flags
 # to tell the polling functions to stop hogging the serial lines 

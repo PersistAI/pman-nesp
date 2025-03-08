@@ -27,6 +27,7 @@
 </div>
 {% endblock %} {% block scripts %}
 <script>
+  stopButton = document.querySelector('button.stop')
   enforceCharset("vol", digits + ".");
   enforceCharset("rate", digits + ".");
 
@@ -55,13 +56,15 @@
   }
 
   async function stop(){
+    stopButton.disabled = true;
     let r = await fetch('/stop')
     if(r.ok){
-    let j = await r.json()
-    display(j.message, 'text-success')
+      let j = await r.json()
+      display(j.message, 'text-success')
     } else {
-    display("Error: failed to stop", 'text-danger')
+      display("Error: failed to stop", 'text-danger')
     }
+    stopButton.disabled = false;
   }
 
   display("Welcome to NESP")
