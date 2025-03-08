@@ -31,3 +31,17 @@ async function pull(args) {
   const data = { args: args };
   return fetchPOST("/pman/pull", data);
 }
+
+function disableButtons(){
+  let btns = document.querySelectorAll('button');
+  btns.forEach(button => {
+    button.disabled = true;
+  });
+}
+
+function enableButtons(){
+  let btns = document.querySelectorAll('button');
+  btns.forEach(button => {
+    button.disabled = false;
+  });
+}

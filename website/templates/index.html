@@ -13,10 +13,10 @@
       <label for="rate">Pump Rate (mL/min)</label>
       <input type="text" value="" name="rate" id="rate" />
       <div class="btn-container">
-        <button class="execute" type="button" onclick="startPull()">
+        <button id="start-push" class="execute" type="button" onclick="startPull()">
           Pull
         </button>
-        <button class="execute" type="button" onclick="startPush()">
+        <button id="start-pull" class="execute" type="button" onclick="startPush()">
           Push
         </button>
         <button class="stop" type="button" onclick="stop()">
@@ -28,6 +28,9 @@
 {% endblock %} {% block scripts %}
 <script>
   stopButton = document.querySelector('button.stop')
+  pullButton = document.getElementById('start-pull')
+  pushButton = document.getElementById('start-push')
+
   enforceCharset("vol", digits + ".");
   enforceCharset("rate", digits + ".");
 
@@ -56,7 +59,7 @@
   }
 
   async function stop(){
-    stopButton.disabled = true;
+    disableButtons()
     let r = await fetch('/stop')
     if(r.ok){
       let j = await r.json()
@@ -64,7 +67,7 @@
     } else {
       display("Error: failed to stop", 'text-danger')
     }
-    stopButton.disabled = false;
+    enableButtons()
   }
 
   display("Welcome to NESP")

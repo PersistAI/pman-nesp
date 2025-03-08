@@ -18,8 +18,6 @@ body{
 }
 /* Content Styling */
 
-
-
 .content{
   overflow:scroll;
 }
@@ -50,6 +48,11 @@ button:hover{
   background-color:#C00000;
 }
 
+button:disabled {
+  background-color: darkgray;
+  color: lightgray;
+}
+
 .btn-container{
   margin-top:2em;
   display:flex;
@@ -73,4 +76,5 @@ button:hover{
   margin:2em;
   height:12em;
 }
+
 
