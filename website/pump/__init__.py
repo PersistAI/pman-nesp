@@ -80,10 +80,11 @@ class PumpManager:
         return r
 
     def stop_all(self, address_array):
-        commands = [self._formatCommand(CommandName.STOP, addr) for addr in address_array]
-        for cmd in commands:
-            self.ser.write(cmd.encode())
-        responses = self.ser.readall()
+        with serial_lock:
+            commands = [self._formatCommand(CommandName.STOP, addr) for addr in address_array]
+            for cmd in commands:
+                self.ser.write(cmd.encode())
+            responses = self.ser.readall()
         return responses
 
     def stop(self, address):
@@ -138,12 +139,12 @@ class PumpManager:
         return 'unknown'
 
     async def wait_for_motor(self, address):
-        """ Wait for the motor to enter standby """
+        """ Wait for the motor to enter standby or be paused """
         self._log("initiated pump.wait_for_motor()")
         command = CommandName.PUMP_MOTOR_OPERATING
         command = self._formatCommand(command, address)
         status = 'OwO'
-        while status in ['busy', 'paused', 'error', 'unknown','timeout']:
+        while status in ['busy', 'error', 'unknown','timeout']:
             await asyncio.sleep(POLL_INTERVAL)
             with serial_lock:
                 response = self.send_command(command)
