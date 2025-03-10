@@ -172,13 +172,21 @@ class PumpManager:
             r = self.send_command(command)
         return r
 
+    def get_phase_number(self, addr):
+        """ return the active phase of the pump program """
+        with serial_lock:
+            cmd = self._formatCommand('PHN', addr)
+            ret = self.send_command(cmd)
+        return ret
+
     def set_rate(self, address, rate):
         """
         rate: units of mL/Min, a float, string, or int
+        note: must be in a Phase function RATE for this command to work
         """
         with serial_lock:
             rate = self._formatArg(rate) # rounds and returns str
-            command = f'RAT{rate}'
+            command = f'RAT{rate}MM' # the MM is for mL/Min
             command = self._formatCommand(command, address)
             ret = self.send_command(command)
         return ret
