@@ -1,0 +1,75 @@
+{% extends "layout.html" %} {% block head%} {% endblock %} {% block content%}
+<div id="form-container">
+    <form>
+      <h3>NESP Control Interface</h3>
+      <label for="address">Address</label>
+      <select value="" name="address" id="address">
+        {% for address in addresses %}
+        <option>{{address}}</option>
+        {% endfor %}
+      </select>
+      <label for="vol">Volume (mL)</label>
+      <input type="text" value="" name="vol" id="vol" />
+      <label for="rate">Pump Rate (mL/min)</label>
+      <input type="text" value="" name="rate" id="rate" />
+      <div class="btn-container">
+        <button id="start-push" class="execute" type="button" onclick="startPull()">
+          Pull
+        </button>
+        <button id="start-pull" class="execute" type="button" onclick="startPush()">
+          Push
+        </button>
+        <button class="stop" type="button" onclick="stop()">
+          STOP
+        </button>
+      </div>
+    </form>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  stopButton = document.querySelector('button.stop')
+  pullButton = document.getElementById('start-pull')
+  pushButton = document.getElementById('start-push')
+
+  enforceCharset("vol", digits + ".");
+  enforceCharset("rate", digits + ".");
+
+  function startPull() {
+    let vol = document.getElementById("vol").value;
+    let rate = document.getElementById("rate").value;
+    let addr = document.getElementById("address").value;
+    let args = [addr, vol, rate];
+    pull(args).then(() => {
+      display("pull completed");
+    }).catch ((error) => {
+      display("Error: " + error.message, 'text-danger');
+    });
+  }
+
+  function startPush() {
+    let vol = document.getElementById("vol").value;
+    let rate = document.getElementById("rate").value;
+    let addr = document.getElementById("address").value;
+    let args = [addr, vol, rate];
+    push(args).then(() => {
+      display("push completed");
+    }).catch ((error) => {
+      display("Error: " + error.message, 'text-danger');
+    });
+  }
+
+  async function stop(){
+    disableButtons()
+    let r = await fetch('/stop')
+    if(r.ok){
+      let j = await r.json()
+      display(j.message, 'text-success')
+    } else {
+      display("Error: failed to stop", 'text-danger')
+    }
+    enableButtons()
+  }
+
+  display("Welcome to NESP")
+</script>
+{% endblock%}
