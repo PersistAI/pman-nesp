@@ -7,7 +7,11 @@ import threading
 import asyncio
 
 serial_lock = threading.Lock()
+
 POLL_INTERVAL = 0.5
+
+COMMAND_PROCESSING_TIME = 0.050
+MOTOR_STARTING_TIME = 0.2
 
 # windows does not let us share com ports, so we use these flags
 # to tell the polling functions to stop hogging the serial lines 
@@ -77,6 +81,7 @@ class PumpManager:
             command = CommandName.RUN
             command = self._formatCommand(command, address)
             r = self.send_command(command)
+        time.sleep(MOTOR_STARTING_TIME) # we can also poll until motor starts instead of a sleep
         return r
 
     def stop_all(self, address_array):
